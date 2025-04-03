@@ -31,7 +31,7 @@ The script performs the following tasks:
 - Ubuntu 20.04+ or Google Colab environment
 - Root (sudo) privileges
 - `vasp.6.4.2.tgz` source file (must be manually placed in working directory)
-- ~15GB free disk space
+- ~50GB free disk space
 
 ---
 
@@ -139,6 +139,9 @@ And modify `makefile.include` to use:
 ```make
 MODDIR = $(PWD)/vasp.6.4.2/modules
 FFLAGS += -module $(MODDIR) -I$(MODDIR)
+vpath %.F90 build/ncl build/gam build/std
+vpath %.f90 build/ncl build/gam build/std
+vpath %.F   build/ncl build/gam build/std
 ```
 
 ### ❌ Error: `mpif90: command not found`
