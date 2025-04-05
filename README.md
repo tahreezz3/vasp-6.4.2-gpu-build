@@ -21,23 +21,23 @@ The script performs the following tasks:
 3. Configure environment variables.
 4. Download and install Intel oneMKL.
 5. Extract and configure the VASP source.
-6. Generate `makefile.include` with all needed flags and paths.
+6. download and edit `makefile.include` with all needed flags and paths.
 7. Compile VASP 6.4.2 for GPU with OpenACC and MPI support.
 
 ---
 
 ## 📥 Requirements
 
-- Ubuntu 20.04+ or Google Colab environment
+- Linux or Google Colab environment
 - Root (sudo) privileges
 - `vasp.6.4.2.tgz` source file (must be manually placed in working directory)
-- ~50GB free disk space
+- ~30GB free disk space
 
 ---
 
 ## ✅ How to Use
 
-### Step-by-Step Instructions
+### Step-by-Step Instructions with vasp-setup.sh
 
 1. **Upload the following files to your environment:**
 
@@ -51,14 +51,14 @@ The script performs the following tasks:
    ```
 
 3. **Run the script:**
-
+it expects an argument defining the CUDA Compute Capability. (e.g., --75 or --80)
    ```bash
-   ./vasp-setup.sh
+   ./vasp-setup.sh --75
    ```
 
 ---
 
-## 🔧 Step-by-Step Breakdown
+## 🔧 Step-by-Step Installation without vasp-setup.sh
 
 ### 1. Install Dependencies
 Updates APT and installs necessary development libraries:
@@ -76,28 +76,25 @@ cd nvhpc_2025_253_Linux_x86_64_cuda_12.8
 printf "\n3\n\n" | ./install
 ```
 
-### 3. Set Environment Variables
-Sets `PATH`, `LD_LIBRARY_PATH`, `CPPFLAGS`, etc., for the compiler, CUDA, and MPI:
-```bash
-export HPC_BASE="/opt/nvidia/hpc_sdk/Linux_x86_64/25.3"
-export CUDA_VER="12.8"
-
-export PATH="$HPC_BASE/comm_libs/mpi/bin:$HPC_BASE/comm_libs/$CUDA_VER/openmpi4/openmpi-4.1.5/bin:$HPC_BASE/compilers/bin:$HPC_BASE/compilers/compilers/extras:$PATH"
-export LD_LIBRARY_PATH="$HPC_BASE/compilers/extras/qd/lib:$HPC_BASE/cuda/$CUDA_VER/targets/x86_64-linux/lib:$HPC_BASE/comm_libs/$CUDA_VER/openmpi4/openmpi-4.1.5/lib:$LD_LIBRARY_PATH"
-export MANPATH="$HPC_BASE/compilers/man:$HPC_BASE/comm_libs/mpi/man:$MANPATH"
-export CPPFLAGS="-I$HPC_BASE/cuda/$CUDA_VER/include"
-```
-
-### 4. Install Intel oneMKL
+### 3. Install Intel oneMKL
 Downloads and installs Intel oneMKL silently:
 ```bash
+cd ..
 wget https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dc93af13-2b3f-40c3-a41b-2bc05a707a80/intel-onemkl-2025.1.0.803.sh
 chmod +x intel-onemkl-2025.1.0.803.sh
 ./intel-onemkl-2025.1.0.803.sh -a -s --eula accept --install-dir /opt/intel
 ```
-
-### 5. Set MKL Environment Variables
+### 4. Set Environment Variables
+Set `PATH`, `LD_LIBRARY_PATH`, `CPPFLAGS`, etc., for the compiler, CUDA, and MPI: temporarily in `terminal` or permanently in `~./bashrc`  
 ```bash
+# ----------- Nvidia hpc sdk ----------
+export HPC_BASE="/opt/nvidia/hpc_sdk/Linux_x86_64/25.3"
+export CUDA_VER="12.8"
+export PATH="$HPC_BASE/comm_libs/mpi/bin:$HPC_BASE/comm_libs/$CUDA_VER/openmpi4/openmpi-4.1.5/bin:$HPC_BASE/compilers/bin:$HPC_BASE/compilers/compilers/extras:$PATH"
+export LD_LIBRARY_PATH="$HPC_BASE/compilers/extras/qd/lib:$HPC_BASE/cuda/$CUDA_VER/targets/x86_64-linux/lib:$HPC_BASE/comm_libs/$CUDA_VER/openmpi4/openmpi-4.1.5/lib:$LD_LIBRARY_PATH"
+export MANPATH="$HPC_BASE/compilers/man:$HPC_BASE/comm_libs/mpi/man:$MANPATH"
+export CPPFLAGS="-I$HPC_BASE/cuda/$CUDA_VER/include"
+# ----------- intel mkl ---------------
 export MKLROOT="/opt/intel/mkl/2025.1"
 export PATH="$MKLROOT/bin:$PATH"
 export LD_LIBRARY_PATH="$MKLROOT/lib/intel64:$LD_LIBRARY_PATH"
@@ -105,24 +102,30 @@ export LIBRARY_PATH="$MKLROOT/lib/intel64:$LIBRARY_PATH"
 export CPATH="$MKLROOT/include:$CPATH"
 ```
 
-### 6. Clean Up
+### 5. Clean Up (Optional to save some space!)
 Remove downloaded archives to save space:
 ```bash
 rm -rf nvhpc_2025_253_Linux_x86_64_cuda_12.8*
 rm -rf intel-onemkl-2025.1.0.803.sh
 ```
 
-### 7. Extract VASP Source
+### 6. Extract VASP Source
+Ensure vasp.6.4.2.tgz exists
 ```bash
 tar xpzf vasp.6.4.2.tgz
 ```
 
-### 8. Generate makefile.include
-A detailed `makefile.include` is created to define compilation settings for NVHPC, CUDA, MKL, NCCL, etc. This is crucial for building VASP correctly on GPU.
-
-### 9. Build VASP
+### 7. Generate makefile.include inside vasp.6.4.2 folder
+A detailed `makefile.include` is created to define compilation settings for NVHPC, CUDA, MKL, NCCL, etc. This is crucial for building VASP correctly on GPU. You can download makefile.include that it was tested on and add your cc code using:
 ```bash
 cd vasp.6.4.2
+wget https://raw.githubusercontent.com/tahreezz3/vasp-6.4.2-gpu-build/main/makefile.include -O makefile.include
+cuda_cc_number=75  # User your cc number based on your gpu architechture IMPORTANT!!! or else you will get error
+sed -i "s/cc\$(cuda_cc-number)/cc$cuda_cc_number/g" $MAKEFILE
+```
+
+### 8. Build VASP
+```bash
 make all
 ```
 
@@ -132,12 +135,13 @@ make all
 
 ### ❌ Error: `nvfortran: error #0004: Unable to open MODULE file`
 ✅ **Fix:**
+first make a folder named modules inside vasp.6.4.2 using:
 ```bash
 mkdir -p vasp.6.4.2/modules
 ```
-And modify `makefile.include` to use:
+And modify and uncomment following lines in `makefile.include` file:
 ```make
-MODDIR = $(PWD)/vasp.6.4.2/modules
+MODDIR = $(PWD)/modules
 FFLAGS += -module $(MODDIR) -I$(MODDIR)
 vpath %.F90 build/ncl build/gam build/std
 vpath %.f90 build/ncl build/gam build/std
@@ -158,7 +162,7 @@ export PATH="/opt/nvidia/hpc_sdk/Linux_x86_64/25.3/comm_libs/12.8/openmpi4/openm
 .
 ├── vasp-setup.sh             # Main installation and build script
 ├── vasp.6.4.2.tgz            # VASP source archive (not included)
-└── README.md                 # This file
+└── README.md                 # This file (optional)
 ```
 
 ---
@@ -181,6 +185,7 @@ For academic use only. Respect VASP’s license terms: https://www.vasp.at
 - NVIDIA for the HPC SDK
 - Intel for MKL
 - The VASP team for their scientific contributions
+- Also chat.openai.com 
 
 ---
 
