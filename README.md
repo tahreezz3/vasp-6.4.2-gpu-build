@@ -141,11 +141,12 @@ mkdir -p vasp.6.4.2/modules
 ```
 And modify and uncomment following lines in `makefile.include` file:
 ```make
-MODDIR = $(PWD)/modules
+MODDIR = $(shell pwd)/modules
 FFLAGS += -module $(MODDIR) -I$(MODDIR)
-vpath %.F90 build/ncl build/gam build/std
-vpath %.f90 build/ncl build/gam build/std
-vpath %.F   build/ncl build/gam build/std
+```
+Then go into the vasp.6.4.2 folder and run make again:
+```bash
+make all
 ```
 
 ### ❌ Error: `mpif90: command not found`
