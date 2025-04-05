@@ -48,7 +48,7 @@ export CPPFLAGS="-I$HPC_BASE/cuda/$CUDA_VER/include"
 
 echo "==> Step 5: Downloading Intel oneMKL"
 
-cd /content || cd ~
+cd /content || cd -
 wget https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dc93af13-2b3f-40c3-a41b-2bc05a707a80/intel-onemkl-2025.1.0.803.sh
 chmod +x intel-onemkl-2025.1.0.803.sh
 ./intel-onemkl-2025.1.0.803.sh -a -s --eula accept --install-dir /opt/intel
