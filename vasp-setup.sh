@@ -10,7 +10,7 @@
 
 # Check if no arguments were provided
 if [ $# -eq 0 ]; then
-    echo "cuda compatibility code not provided. Usage: ./vasp-setup.sh --75 #here 75 is cc 7.5"
+    echo "Cuda compatibility code not provided. Usage: ./vasp-setup.sh --75 #here 75 is cc 7.5"
     exit 1
 fi
 # Extract the number from the first argument, assuming it's in the format --XX
