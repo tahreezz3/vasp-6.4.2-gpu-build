@@ -18,9 +18,9 @@ CPP         = nvfortran -Mpreprocess -Mfree -Mextend -E $(CPP_OPTIONS) $*$(FUFFI
 
 # ----------------------------------------
 # Compiler setup
-CC          = mpicc  -acc -gpu=cc75,cuda12.8 -mp
-FC          = mpif90 -acc -gpu=cc75,cuda12.8 -mp
-FCL         = mpif90 -acc -gpu=cc75,cuda12.8 -mp -c++libs
+CC          = mpicc  -acc -gpu=cc$(cuda_cc-number),cuda12.8 -mp
+FC          = mpif90 -acc -gpu=cc$(cuda_cc-number),cuda12.8 -mp
+FCL         = mpif90 -acc -gpu=cc$(cuda_cc-number),cuda12.8 -mp -c++libs
 
 FREE        = -Mfree
 FFLAGS      = -Mbackslash -Mlarge_arrays -tp=host
